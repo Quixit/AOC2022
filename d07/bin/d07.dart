@@ -118,7 +118,7 @@ void main(List<String> arguments) {
 
   log("Total Under 100000: $result");
 
-  //total - used - needed.
+  //needed - (total - used).
   var space = 30000000 - (70000000 - root.total);
 
   result = root.getFirstAtLeast(space);
