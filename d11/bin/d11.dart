@@ -1,6 +1,5 @@
 import 'package:d11/d11.dart';
 import 'dart:collection';
-import 'dart:math';
 
 final sample = readMonkey([
   "Monkey 0:",
