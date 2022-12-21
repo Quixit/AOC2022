@@ -1,7 +1,9 @@
 import 'dart:collection';
+import 'dart:math';
 
 import 'package:d16/d16.dart';
 import 'package:dartx/dartx.dart';
+import 'package:test/scaffolding.dart';
 
 final sample = [
   "Valve AA has flow rate=0; tunnels lead to valves DD, II, BB",
@@ -22,58 +24,69 @@ var input = sample.map((e) => e.split(" ")).map((e) => Valve(
     e.sublist(9).map((e) => e.removeSuffix(",")).toList()));
 
 //readInput();
-
-var max = 29;
-
 class Valve {
   Valve(this.key, this.value, this.destinations);
 
   String key;
   int value;
-  List<Valve> destinations;
+  List<String> destinations;
 }
 
-class Result {
-  Result(this.current, this.activated, this.timer);
+Map<String, Map<String, int>> getPaths(Map<String, Valve> valves) {
+  var shortestPaths = valves.values.associate(
+      (e) => MapEntry(e.key, e.destinations.associateWith((v) => 1)));
 
-  Valve current;
-  List<Valve> activated;
-  int timer;
-
-  Result next(Valve node) {
-    return Result(node, List.from(activated), timer + 1);
-  }
-
-  int process(Map<String, Valve> valves) {
-    if (current.value == 0 || activated.contains(current)) {
-      // don't activate
-    } else {
-      activated.add(current);
-      timer++;
-    }
-
-    if (timer == max) {
-      results.add(this);
-    }
-    if (timer > max) {
-    } else {
-      var validDestinations = current.destinations;
-
-      if (validDestinations.isNotEmpty) {
-        for (var destination in validDestinations) {
-          next(valves[destination]!).process(valves, results);
-        }
-      } else {
-        results.add(this);
+  for (var from in shortestPaths.keys) {
+    for (var to in shortestPaths.keys) {
+      for (var middle in shortestPaths.keys) {
+        shortestPaths[from]![to] = min(
+            shortestPaths[from]?[to] ?? 9999999999,
+            (shortestPaths[from]?[middle] ?? 9999999999) +
+                (shortestPaths[middle]?[to] ?? 9999999999));
       }
     }
   }
+
+  //Remove rooms that suck.
+  shortestPaths =
+      shortestPaths.filter((e) => valves[e.key]!.value > 0 || e.key == "AA");
+  for (var key in shortestPaths.keys) {
+    shortestPaths[key] =
+        shortestPaths[key]!.filter((e) => valves[e.key]!.value > 0);
+  }
+
+  return shortestPaths;
+}
+
+const maxRounds = 30;
+
+int mostReleased(Map<String, Valve> valves, Map<String, Map<String, int>> paths,
+    String current, Set<String> opened, int round, int totalReleased) {
+  return paths[current]!
+          .filter((e) => !opened.contains(e.key))
+          .filter((e) => round + e.value + 1 < maxRounds)
+          .map((key, value) => MapEntry(
+              key,
+              mostReleased(
+                  valves,
+                  paths,
+                  key,
+                  Set.from(opened..appendElement(key)),
+                  round + value + 1,
+                  totalReleased +
+                      ((maxRounds - round - value - 1) * valves[key]!.value))))
+          .toList()
+          .map((e) => e.second)
+          .max() ??
+      totalReleased;
 }
 
 void main(List<String> arguments) {
   Map<String, Valve> valves = {for (var e in input) e.key: e};
 
-  var released = Result(valves["AA"]!, <Valve>[], 0).process(valves);
+  var paths = getPaths(valves);
 
-  print("The max pressure released is: $max");
+  var released = mostReleased(valves, paths, "AA", {}, 0, 0);
+
+  print("Max released $released");
 }
