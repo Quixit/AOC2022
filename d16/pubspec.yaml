@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   dartx: any
+  trotter: any
 
 dev_dependencies:
   lints: ^2.0.0

@@ -1,9 +1,8 @@
-import 'dart:collection';
 import 'dart:math';
 
 import 'package:d16/d16.dart';
 import 'package:dartx/dartx.dart';
-import 'package:test/scaffolding.dart';
+import 'package:trotter/trotter.dart';
 
 final sample = [
   "Valve AA has flow rate=0; tunnels lead to valves DD, II, BB",
@@ -18,12 +17,11 @@ final sample = [
   "Valve JJ has flow rate=21; tunnel leads to valve II",
 ];
 
-var input = sample.map((e) => e.split(" ")).map((e) => Valve(
+var input = readInput().map((e) => e.split(" ")).map((e) => Valve(
     e[1],
     int.parse(e[4].removePrefix("rate=").removeSuffix(";")),
     e.sublist(9).map((e) => e.removeSuffix(",")).toList()));
 
-//readInput();
 class Valve {
   Valve(this.key, this.value, this.destinations);
 
@@ -58,23 +56,34 @@ Map<String, Map<String, int>> getPaths(Map<String, Valve> valves) {
   return shortestPaths;
 }
 
-const maxRounds = 30;
-
-int mostReleased(Map<String, Valve> valves, Map<String, Map<String, int>> paths,
-    String current, Set<String> opened, int round, int totalReleased) {
+int mostReleased(
+    Map<String, Valve> valves,
+    Map<String, Map<String, int>> paths,
+    String current,
+    Set<String> opened,
+    int round,
+    int maxRounds,
+    int totalReleased) {
   return paths[current]!
           .filter((e) => !opened.contains(e.key))
           .filter((e) => round + e.value + 1 < maxRounds)
-          .map((key, value) => MapEntry(
-              key,
-              mostReleased(
-                  valves,
-                  paths,
-                  key,
-                  Set.from(opened..appendElement(key)),
-                  round + value + 1,
-                  totalReleased +
-                      ((maxRounds - round - value - 1) * valves[key]!.value))))
+          .map((key, value) {
+            var newOpened = Set<String>.from(opened);
+            newOpened.add(key);
+
+            return MapEntry(
+                key,
+                mostReleased(
+                    valves,
+                    paths,
+                    key,
+                    newOpened,
+                    round + value + 1,
+                    maxRounds,
+                    totalReleased +
+                        ((maxRounds - round - value - 1) *
+                            valves[key]!.value)));
+          })
           .toList()
           .map((e) => e.second)
           .max() ??
@@ -86,7 +95,19 @@ void main(List<String> arguments) {
 
   var paths = getPaths(valves);
 
-  var released = mostReleased(valves, paths, "AA", {}, 0, 0);
+  var released = mostReleased(valves, paths, "AA", {}, 0, 30, 0);
 
   print("Max released $released");
+
+  var noAA = paths.keys.filter((e) => e != "AA").toList();
+  var halves = Combinations((noAA.length / 2).floor(), noAA)();
+
+  released = halves.map((e) {
+        return mostReleased(valves, paths, "AA", Set.from(e), 0, 26, 0) +
+            mostReleased(
+                valves, paths, "AA", Set.from(paths.keys.except(e)), 0, 26, 0);
+      }).max() ??
+      0;
+
+  print("Max released avec Éléphant $released");
 }
