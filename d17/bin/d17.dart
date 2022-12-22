@@ -77,6 +77,16 @@ void main(List<String> arguments) {
 
   //Cycles would have to be a multiple of the lengths of the inputs.
   var baseMultiple = input.length * inputShapes.length;
+  var baseHeight = simulate(baseMultiple);
+
+  for (var i = 2; i < 100000; i++) {
+    if (simulate(baseMultiple * i) == -1) {
+      print("Found solid at $i");
+      break;
+    } else {
+      print("Tried $i");
+    }
+  }
 }
 
 int simulate(int maxRocks) {
@@ -189,5 +199,7 @@ int simulate(int maxRocks) {
     rock++; //thank you, next.
   }
 
-  return maxHeight;
+  return shaft[maxHeight - 1].all((element) => element == true)
+      ? -1
+      : maxHeight;
 }
