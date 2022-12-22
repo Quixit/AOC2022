@@ -52,6 +52,20 @@ class LoopQueue<T> {
   }
 }
 
+draw(List<List<bool>> shaft) {
+  for (var y = shaft.length - 1; y >= 0; y--) {
+    var line = "|";
+    for (var x = 0; x < shaft.first.length; x++) {
+      line += (shaft[y][x] ? "#" : ".");
+    }
+    line += "|";
+    print(line);
+  }
+
+  print("+-------+");
+  print("");
+}
+
 var right = ">".codeUnitAt(0);
 var left = "<".codeUnitAt(0);
 
@@ -155,6 +169,9 @@ void main(List<String> arguments) {
     }
 
     maxHeight = origin.y + shape.length;
+
+    print("Rock $rock");
+    draw(shaft);
 
     rock++; //thank you, next.
   }
