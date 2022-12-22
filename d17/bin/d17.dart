@@ -83,7 +83,7 @@ void main(List<String> arguments) {
         //check collision
         for (var y = 0; y < shape.length; y++) {
           for (var x = 0; x < shape.first.length; x++) {
-            if (origin.y == 0 || shaft[origin.y - y - 1][origin.x + x]) {
+            if (origin.y == 0 || shaft[origin.y + y - 1][origin.x + x]) {
               moving = false;
               y = shape.length;
               x = shape.first.length;
@@ -92,55 +92,57 @@ void main(List<String> arguments) {
         }
       }
 
-      //wind
-      var direction = wind.next;
+      if (moving) {
+        //wind
+        var direction = wind.next;
 
-      if (direction == right) {
-        if (origin.x < 7 - shape.first.length) {
-          var canMove = true;
+        if (direction == right) {
+          if (origin.x < 7 - shape.first.length) {
+            var canMove = true;
 
-          if (origin.y <= maxHeight + 1) {
-            for (var y = 0; y < shape.length; y++) {
-              for (var x = 0; x < shape.first.length; x++) {
-                var compare = shaft[origin.y + y][origin.x + x + 1];
+            if (origin.y <= maxHeight + 1) {
+              for (var y = 0; y < shape.length; y++) {
+                for (var x = 0; x < shape.first.length; x++) {
+                  var compare = shaft[origin.y + y][origin.x + x + 1];
 
-                if (compare) {
-                  canMove = false;
+                  if (compare) {
+                    canMove = false;
+                  }
                 }
               }
             }
+
+            if (canMove) {
+              origin.x++;
+            }
           }
+        } else if (direction == left) {
+          if (origin.x > 0) {
+            var canMove = true;
 
-          if (canMove) {
-            origin.x++;
-          }
-        }
-      } else if (direction == left) {
-        if (origin.x > 0) {
-          var canMove = true;
+            if (origin.y <= maxHeight + 1) {
+              for (var y = 0; y < shape.length; y++) {
+                for (var x = 0; x < shape.first.length; x++) {
+                  var compare = shaft[origin.y + y][origin.x + x - 1];
 
-          if (origin.y <= maxHeight + 1) {
-            for (var y = 0; y < shape.length; y++) {
-              for (var x = 0; x < shape.first.length; x++) {
-                var compare = shaft[origin.y + y][origin.x + x - 1];
-
-                if (compare) {
-                  canMove = false;
+                  if (compare) {
+                    canMove = false;
+                  }
                 }
               }
             }
-          }
 
-          if (canMove) {
-            origin.x--;
+            if (canMove) {
+              origin.x--;
+            }
           }
+        } else {
+          throw Exception("Direction logic wrong.");
         }
-      } else {
-        throw Exception("Direction logic wrong.");
+
+        //down
+        origin.y--;
       }
-
-      //down
-      origin.y--;
     }
 
     //draw at origin;
@@ -152,7 +154,7 @@ void main(List<String> arguments) {
       }
     }
 
-    maxHeight = origin.y + shape.length - 1;
+    maxHeight = origin.y + shape.length;
 
     rock++; //thank you, next.
   }
