@@ -166,3 +166,20 @@ class Dijkstra {
 int getManhattan(Vector one, Vector two) {
   return (one.x - two.x).abs() + (one.y - two.y).abs();
 }
+
+class LoopQueue<T> {
+  LoopQueue(this.data);
+
+  List<T> data;
+  int index = 0;
+
+  T get next {
+    var result = data[index];
+
+    index++;
+
+    if (index >= data.length) index = 0;
+
+    return result;
+  }
+}

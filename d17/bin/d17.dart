@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:math';
 
 import 'package:d17/d17.dart';
@@ -35,23 +36,6 @@ const inputShapes = [
   ]
 ];
 
-class LoopQueue<T> {
-  LoopQueue(this.data);
-
-  List<T> data;
-  int index = 0;
-
-  T get next {
-    var result = data[index];
-
-    index++;
-
-    if (index >= data.length) index = 0;
-
-    return result;
-  }
-}
-
 draw(List<List<bool>> shaft) {
   for (var y = shaft.length - 1; y >= 0; y--) {
     var line = "|";
@@ -75,18 +59,25 @@ void main(List<String> arguments) {
 
   print("Max height: $maxHeight");
 
-  //Cycles would have to be a multiple of the lengths of the inputs.
-  var baseMultiple = input.length * inputShapes.length;
-  var baseHeight = simulate(baseMultiple);
+  maxHeight = simulate(1000000000000);
 
-  //Figure out cycles.
+  print("Stupid Elephants: $maxHeight");
+}
+
+class State {
+  State(this.rocks, this.height);
+
+  int rocks;
+  int height;
 }
 
 int simulate(int maxRocks) {
   var wind = LoopQueue(input);
   var shapes = LoopQueue(inputShapes);
+  Map<String, State> states = {};
 
   var maxHeight = 0;
+  var cycleHeight = 0;
   List<List<bool>> shaft = [];
   var rock = 1;
   while (rock <= maxRocks) {
@@ -190,7 +181,33 @@ int simulate(int maxRocks) {
     maxHeight = rest > maxHeight ? rest : maxHeight;
 
     rock++; //thank you, next.
+
+    //Look for cycles.
+    if (maxHeight > 7) {
+      var toplines = shaft.skip(maxHeight - 8).take(8).fold<Iterable<bool>>([],
+          (previousValue, element) => previousValue.append(element)).toList();
+
+      var top = 0;
+
+      for (var i = 0; i < 8; i++) {
+        top += toplines[i] ? 2 ^ i : 0;
+      }
+
+      var compare = String.fromCharCodes([top, shapes.index, wind.index]);
+      var state = states[compare];
+
+      if (state != null) {
+        var repeatLength = rock - state.rocks;
+        var repeats = ((maxRocks - rock) / repeatLength).floor();
+        rock += repeatLength * repeats;
+        cycleHeight += repeats * (maxHeight - state.height);
+
+        states.clear();
+      } else {
+        states[compare] = State(rock, maxHeight);
+      }
+    }
   }
 
-  return maxHeight;
+  return maxHeight + cycleHeight;
 }
